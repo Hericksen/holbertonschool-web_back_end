@@ -1,0 +1,3 @@
+// Show database in Mongo
+
+show databases
