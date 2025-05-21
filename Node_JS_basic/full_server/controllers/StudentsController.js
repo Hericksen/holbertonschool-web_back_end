@@ -21,7 +21,7 @@ class StudentsController {
 
       // Send response with status 200
       res.status(200).send(message.trim());
-    } catch {
+    } catch (err) {
       // If something goes wrong (database not available)
       res.status(500).send('Cannot load the database');
     }
