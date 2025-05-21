@@ -1,37 +1,27 @@
 // full_server/controllers/StudentsController.js
-const { readDatabase } = require('../utils'); // assuming the readDatabase function is located in the utils file
+const { readDatabase } = require('../utils');
+const dbFile = process.argv[2] || '';
 
 class StudentsController {
   // Method to get all students and display them by field
   static async getAllStudents(req, res) {
     try {
-      const students = await readDatabase();  // Call the readDatabase function to fetch data
+      const fields = await readDatabase(dbFile);
 
       // Check if the students data exists
-      if (!students || students.length === 0) {
+      if (!fields || fields.length === 0) {
         return res.status(500).send('Cannot load the database');
       }
-
-      // Group students by field (case insensitive)
-      const fields = {};
-      students.forEach(student => {
-        const field = student.field.toLowerCase();  // Ensure case insensitivity
-        if (!fields[field]) {
-          fields[field] = [];
-        }
-        fields[field].push(student.firstname);
-      });
 
       // Prepare the response message
       let message = 'This is the list of our students\n';
       for (const field in fields) {
-        const studentList = fields[field].join(', ');
-        message += `Number of students in ${field.toUpperCase()}: ${fields[field].length}. List: ${studentList}\n`;
+        message += `Number of students in ${field}: ${fields[field].length}. List: ${fields[field].join(', ')}\n`;
       }
 
       // Send response with status 200
-      res.status(200).send(message);
-    } catch (error) {
+      res.status(200).send(message.trim());
+    } catch {
       // If something goes wrong (database not available)
       res.status(500).send('Cannot load the database');
     }
@@ -47,7 +37,7 @@ class StudentsController {
     }
 
     try {
-      const students = await readDatabase();  // Call the readDatabase function to fetch data
+      const students = await readDatabase(dbFile);  // Call the readDatabase function to fetch data
 
       // Check if the students data exists
       if (!students || students.length === 0) {
