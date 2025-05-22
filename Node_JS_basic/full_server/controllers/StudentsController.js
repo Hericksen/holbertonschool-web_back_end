@@ -1,60 +1,40 @@
-// full_server/controllers/StudentsController.js
 const { readDatabase } = require('../utils');
-const dbFile = process.argv[2] || '';
 
 class StudentsController {
-  // Method to get all students and display them by field
   static async getAllStudents(req, res) {
+    const dbFile = process.argv[2];
+
     try {
-      const fields = await readDatabase(dbFile);
+      const students = await readDatabase(dbFile);
+      let response = 'This is the list of our students';
 
-      // Check if the students data exists
-      if (!fields || fields.length === 0) {
-        return res.status(500).send('Cannot load the database');
-      }
+      const sortedFields = Object.keys(students).sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
 
-      // Prepare the response message
-      let message = 'This is the list of our students\n';
-      for (const field in fields) {
-        message += `Number of students in ${field}: ${fields[field].length}. List: ${fields[field].join(', ')}\n`;
-      }
+      sortedFields.forEach((field) => {
+        const list = students[field].join(', ');
+        response += `\nNumber of students in ${field}: ${students[field].length}. List: ${list}`;
+      });
 
-      // Send response with status 200
-      res.status(200).send(message.trim());
-    } catch (err) {
-      // If something goes wrong (database not available)
+      res.status(200).send(response);
+    } catch (error) {
       res.status(500).send('Cannot load the database');
     }
   }
 
-  // Method to get all students by major (either CS or SWE)
   static async getAllStudentsByMajor(req, res) {
-    const { major } = req.params;  // Get the major parameter from the URL
+    const dbFile = process.argv[2];
+    const { major } = req.params;
 
-    // Check if the major is valid (CS or SWE)
     if (!['CS', 'SWE'].includes(major)) {
-      return res.status(500).send('Major parameter must be CS or SWE');
+      res.status(500).send('Major parameter must be CS or SWE');
+      return;
     }
 
     try {
-      const students = await readDatabase(dbFile);  // Call the readDatabase function to fetch data
-
-      // Check if the students data exists
-      if (!students || students.length === 0) {
-        return res.status(500).send('Cannot load the database');
-      }
-
-      // Filter students based on the major
-      const filteredStudents = students.filter(student => student.major === major);
-      const studentNames = filteredStudents.map(student => student.firstname);
-
-      // Prepare the response message
-      const message = `List: ${studentNames.join(', ')}`;
-
-      // Send response with status 200
-      res.status(200).send(message);
+      const students = await readDatabase(dbFile);
+      const list = students[major] || [];
+      res.status(200).send(`List: ${list.join(', ')}`);
     } catch (error) {
-      // If something goes wrong (database not available)
       res.status(500).send('Cannot load the database');
     }
   }
